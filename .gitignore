@@ -1,0 +1,8 @@
+*~
+.#*
+*.elc
+*autoloads.el
+*loaddefs.el
+*.s
+*.exe
+TAGS

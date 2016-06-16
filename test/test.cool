@@ -1,0 +1,126 @@
+-- Test cool mode
+
+
+class Main inherits IO {
+  newline() : Object {
+    out_string("\n");
+    abab();
+    abort()
+  }
+}
+
+func(a : Int,
+     b : Int) : Int {
+  a + b;
+  b + c;
+}
+
+-- if => none hanging
+if s = 1
+then abort()
+else newline()
+fi
+
+-- if => hanging :then
+if s = "stop" then
+  abort()
+else
+  newline()
+fi
+
+-- if => hanging :else
+if s = 1 then abort() else 
+  newline()
+fi
+
+-- elseif => hanging :else
+if s = 1 then abort() else
+if s = 2 then newline()
+else prompt()
+fi fi
+
+-- elseif => hanging :then
+if s = 1 then abort()
+else if s = 2 then 
+  newline() 
+else
+  s = 3
+fi fi
+
+-- elseif => none hanging
+if s = 1 then abort()
+else if s = 2 then newline() 
+else s = 3
+fi fi
+
+-- while
+while true loop
+  if s = "stop" then 
+    abort() 
+  else 
+    {
+      newline();
+      newline()
+    }
+  fi
+pool
+
+-- let
+(let s : Int <- 1 in
+   if s = 1 then
+     abort()
+   else
+     out_string("1")
+   fi)
+
+-- case
+case var of
+  a : A => var <- a.blah();
+  o : Object => {
+      abort(); 0;
+    };
+  b : B => var <- b.blah();
+  d : D => var <- d.blah();
+esac
+
+(* This method implements a driver for testing the ATOI class.
+ * The program repeatedly asks the user to enter a number, which
+ * is then coverted from its string form to an integer and back
+ * again to a string.  The results of both conversions are printed
+ * on the screen.  Typing "stop" at the prompt exits the program. *)
+
+class Main inherits IO {
+  newline() : String {
+    out_string("\n");
+  };
+  
+  prompt() : String {
+    {
+      out_string("Enter a number>");
+      in_string();
+    }
+  };
+
+  main() : Object {
+    -- Since we didn't bother to inherit from the A2I class, we have
+    -- to have an object of type A2I in order to access the
+    -- methods of that class.
+    (let z : A2I <- new A2I in
+       while true loop
+         (let s : String <- prompt() in
+            if s = "stop" then 
+              abort() (* we don't bother to terminate gracefully *)
+            else
+              (let i : Int <- z.a2i(s) in
+                 (let news : String <- z.i2a(i) in
+	            {
+	              out_int(i);
+                      newline();
+                      out_string(news);
+                      newline();
+	            }
+                 ))
+            fi)
+       pool)
+  };
+};

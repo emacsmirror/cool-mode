@@ -68,8 +68,7 @@
   :type '(repeat function)
   :group 'cool)
 
-;; ------------------------------------------------------------
-;;* Font-locking
+;;--- Font-Locking ---------------------------------------------------
 
 (defun cool-syms-re (syms)
   (concat "\\_<" (regexp-opt syms t) "\\_>"))
@@ -120,8 +119,7 @@
     nil nil nil nil
     (font-lock-syntactic-keywords . cool-font-lock-syntactic-keywords)))
 
-;; ------------------------------------------------------------
-;;* Indentation
+;;--- Indentation ----------------------------------------------------
 
 ;; smie references
 ;; #<marker at 52833 in smie.el>
@@ -166,8 +164,7 @@
     (`(:after . "{") (if (smie-rule-hanging-p) cool-indent-offset))
     ))
 
-;; ------------------------------------------------------------
-;;* Syntax
+;;--- Syntax ---------------------------------------------------------
 
 (defvar cool-mode-syntax-table
   (let ((st (make-syntax-table)))
@@ -187,8 +184,25 @@
     (modify-syntax-entry ?\n "> b" st)
     st))
 
-;; ------------------------------------------------------------
-;;* Convience functions
+;;--- Interactive Functions ------------------------------------------
+
+;; compile
+(defun cool-compile ()
+  "Compile current file with `cool-compiler'."
+  (interactive)
+  (let ((compile-command
+         (format "%s %s" cool-compiler buffer-file-name))
+        (compilation-read-command))
+    (call-interactively 'compile)))
+
+(defun cool-compile-and-run ()
+  "Compile and run current file, showing output in *cool-output*."
+  (interactive)
+  (call-interactively 'cool-compile)
+  (async-shell-command
+   (format "%s %s.s" cool-assembler
+           (file-name-sans-extension buffer-file-name))
+   "*cool-output*"))
 
 ;; comment as multi-line box if region spans more than one line,
 ;; otherwise use single line comment
@@ -232,12 +246,20 @@
      (t (newline)
         (indent-according-to-mode)))))
 
-;; ------------------------------------------------------------
+;;--- Major Mode -----------------------------------------------------
+
+(defvar cool-menu
+  '("Cool"
+    ["Compile" cool-compile t]
+    ["Compile and Run" cool-compile-and-run t]))
 
 (defvar cool-mode-map
   (let ((km (make-sparse-keymap)))
-    (define-key km (kbd "RET") #'cool-newline-dwim)
-    (define-key km (kbd "M-;") #'cool-comment-dwim)
+    (easy-menu-define nil km nil cool-menu)
+    (define-key km (kbd "RET")     #'cool-newline-dwim)
+    (define-key km (kbd "M-;")     #'cool-comment-dwim)
+    (define-key km (kbd "<f5>")    #'cool-compile)
+    (define-key km (kbd "C-c C-c") #'cool-compile-and-run)
     km))
 
 (define-abbrev-table 'cool-mode-abbrev-table ())

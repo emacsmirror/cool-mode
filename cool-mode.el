@@ -166,22 +166,21 @@
 
 ;;--- Syntax ---------------------------------------------------------
 
+;; comments '--' or '(*', '*)', latter are nestable
 (defvar cool-mode-syntax-table
   (let ((st (make-syntax-table)))
-    ;; comments '--' or '(*', '*)'
     (modify-syntax-entry ?- ". 12b" st)
-    (modify-syntax-entry ?\* ". 23n" st)
-    (modify-syntax-entry ?\( "()1" st)
-    (modify-syntax-entry ?\) ")(4" st)
-    (modify-syntax-entry ?_ "w" st)
+    (modify-syntax-entry ?\n "> b" st)
+    (modify-syntax-entry ?\* ". 23c" st)
+    (modify-syntax-entry ?\( "( 1cn" st)
+    (modify-syntax-entry ?\) ") 4cn" st)
+    (modify-syntax-entry ?_ "_" st)
     (modify-syntax-entry ?+ "." st)
     (modify-syntax-entry ?~ "." st)
     (modify-syntax-entry ?= "." st)
     (modify-syntax-entry ?< "." st)
     (modify-syntax-entry ?> "." st)
     (modify-syntax-entry ?\/ "." st)
-    ;; Newline is a comment-ender.
-    (modify-syntax-entry ?\n "> b" st)
     st))
 
 ;;--- Interactive Functions ------------------------------------------

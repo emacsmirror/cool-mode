@@ -88,11 +88,11 @@
       (,(cool-syms-re builtins) . font-lock-builtin-face)
       (,(cool-syms-re constants) . font-lock-constant-face)
       ;; Features (methods or attributes) must start with lowercase letter
-      ("\\(\\w+\\)\\s *(" (1 font-lock-function-name-face))
+      ("\\([[:alnum:]_]+\\)\\s *(" (1 font-lock-function-name-face))
       ;; variables
-      (,(concat "\\(\\w+\\)[ \t]*\\(?::\\s-*" cool-type-name-re "[ \t]*\\|<-\\)")
+      (,(concat "\\([[:alnum:]_]+\\)[ \t]*\\(?::\\s-*" cool-type-name-re "[ \t]*\\|<-\\)")
        (1 font-lock-variable-name-face))
-      ("\\(\\w+\\)[.]" (1 font-lock-variable-name-face))
+      ("\\([[:alnum:]_]+\\)[.]" (1 font-lock-variable-name-face))
       ;; types / classes
       (,(concat
          "\\(?:\\<\\(?:class\\|inherits\\|new\\)\\>\\|\\:\\)[ \t]*" 

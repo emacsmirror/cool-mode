@@ -1,5 +1,4 @@
--- Test cool mode
-
+-- Test cool mode -*- cool -*-
 
 class Main inherits IO {
   newline() : Object {

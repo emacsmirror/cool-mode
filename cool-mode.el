@@ -1,4 +1,4 @@
-;;; cool-mode --- Major mode for cool compiler language editing
+;;; cool-mode --- Major mode for cool compiler language editing -*- lexical-binding: t; -*-
 
 ;; Author: Noah Peart <noah.v.peart@gmail.com>
 ;; URL: https://github.com/nverno/cool-mode
@@ -68,39 +68,42 @@
   :type '(repeat function)
   :group 'cool)
 
-;;--- Font-Locking ---------------------------------------------------
+;;——— Font-Lock ——————————————————————————————————————————————————————
 
-(defun cool-syms-re (syms)
-  (concat "\\_<" (regexp-opt syms t) "\\_>"))
+(eval-when-compile
+ (defmacro cool-syms-re (syms)
+   `(concat "\\_<" (regexp-opt ,syms t) "\\_>")))
 
 ;; type/class names start with uppercase letter
 ;; "IO" "Object" "String" "SELF_TYPE" "Int" "Bool"
 (defconst cool-type-name-re "\\([A-Z][A-Z0-9a-z_]*\\)")
 
 (defvar cool-font-lock-keywords
-  ;; FIXME: keywords are case-insensitive, but constants are not (true, false)
-  (let ((keywords '("class" "else" "fi" "if" "in" "inherits" "isvoid" "let" "loop"
-                    "pool" "then" "while" "case" "esac" "new" "of" "not"))
-        (builtins '("length" "concat" "substr" "abort" "type_name" "copy"
-                    "new" "out_string" "out_int" "in_string" "in_int" "self"))
-        (constants '("true" "false")))
-    `((,(cool-syms-re keywords) . font-lock-keyword-face)
-      (,(cool-syms-re builtins) . font-lock-builtin-face)
-      (,(cool-syms-re constants) . font-lock-constant-face)
-      ;; Features (methods or attributes) must start with lowercase letter
-      ("\\([[:alnum:]_]+\\)\\s *(" (1 font-lock-function-name-face))
-      ;; variables
-      (,(concat "\\([[:alnum:]_]+\\)[ \t]*\\(?::\\s-*" cool-type-name-re "[ \t]*\\|<-\\)")
-       (1 font-lock-variable-name-face))
-      ("\\([[:alnum:]_]+\\)[.]" (1 font-lock-variable-name-face))
-      ;; types / classes
-      (,(concat
-         "\\(?:\\<\\(?:class\\|inherits\\|new\\)\\>\\|\\:\\)[ \t]*" 
-         cool-type-name-re)
-       (1 font-lock-type-face))
-      ;; type conversion
-      (,(concat "\\.\\s *(" cool-type-name-re)
-       (1 font-lock-type-face))))
+  (eval-when-compile
+    ;; FIXME: keywords are case-insensitive, but constants are not (true, false)
+    (let ((keywords '("class" "else" "fi" "if" "in" "inherits" "isvoid" "let" "loop"
+                      "pool" "then" "while" "case" "esac" "new" "of" "not"))
+          (builtins '("length" "concat" "substr" "abort" "type_name" "copy"
+                      "new" "out_string" "out_int" "in_string" "in_int" "self"))
+          (constants '("true" "false")))
+      `((,(cool-syms-re keywords) . font-lock-keyword-face)
+        (,(cool-syms-re builtins) . font-lock-builtin-face)
+        (,(cool-syms-re constants) . font-lock-constant-face)
+        ;; Features (methods or attributes) must start with lowercase letter
+        ("\\([[:alnum:]_]+\\)\\s *(" (1 font-lock-function-name-face))
+        ;; variables
+        (,(concat "\\([[:alnum:]_]+\\)[ \t]*\\(?::\\s-*"
+                  cool-type-name-re "[ \t]*\\|<-\\)")
+         (1 font-lock-variable-name-face))
+        ("\\([[:alnum:]_]+\\)[.]" (1 font-lock-variable-name-face))
+        ;; types / classes
+        (,(concat
+           "\\(?:\\<\\(?:class\\|inherits\\|new\\)\\>\\|\\:\\)[ \t]*" 
+           cool-type-name-re)
+         (1 font-lock-type-face))
+        ;; type conversion
+        (,(concat "\\.\\s *(" cool-type-name-re)
+         (1 font-lock-type-face)))))
   "Default expressions to font lock in cool-mode.")
 
 ;; nested comments, unusual string escape sequences -- sml-mode
@@ -119,7 +122,7 @@
     nil nil nil nil
     (font-lock-syntactic-keywords . cool-font-lock-syntactic-keywords)))
 
-;;--- Indentation ----------------------------------------------------
+;;——— Indentation ————————————————————————————————————————————————————
 
 ;; smie references
 ;; #<marker at 52833 in smie.el>
@@ -164,7 +167,7 @@
     (`(:after . "{") (if (smie-rule-hanging-p) cool-indent-offset))
     ))
 
-;;--- Syntax ---------------------------------------------------------
+;;——— Syntax —————————————————————————————————————————————————————————
 
 ;; comments '--' or '(*', '*)', latter are nestable
 (defvar cool-mode-syntax-table
@@ -183,7 +186,7 @@
     (modify-syntax-entry ?\/ "." st)
     st))
 
-;;--- Interactive Functions ------------------------------------------
+;;——— Commands ———————————————————————————————————————————————————————
 
 ;; compile
 (defun cool-compile ()
@@ -199,8 +202,7 @@
   (interactive)
   (call-interactively 'cool-compile)
   (async-shell-command
-   (format "%s %s.s" cool-assembler
-           (file-name-sans-extension buffer-file-name))
+   (format "%s %s.s" cool-assembler (file-name-sans-extension buffer-file-name))
    "*cool-output*"))
 
 ;; comment as multi-line box if region spans more than one line,
@@ -245,7 +247,7 @@
      (t (newline)
         (indent-according-to-mode)))))
 
-;;--- Major Mode -----------------------------------------------------
+;;——— Major Mode —————————————————————————————————————————————————————
 
 (defvar cool-menu
   '("Cool"

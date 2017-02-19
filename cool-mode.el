@@ -76,7 +76,8 @@
 
 ;; type/class names start with uppercase letter
 ;; "IO" "Object" "String" "SELF_TYPE" "Int" "Bool"
-(defconst cool-type-name-re "\\([A-Z][A-Z0-9a-z_]*\\)")
+(eval-and-compile
+  (defconst cool-type-name-re "\\([A-Z][A-Z0-9a-z_]*\\)"))
 
 (defvar cool-font-lock-keywords
   (eval-when-compile

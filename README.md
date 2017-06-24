@@ -9,8 +9,8 @@ Description:
 
 TODO:
 - compiler/assembler
-- case-insensitive keywords only
 - annotate company
+- ~~case-insensitive keywords only~~ - done by bhrgunatha
 
 
 ---

@@ -70,9 +70,44 @@
 
 ;;——— Font-Lock ——————————————————————————————————————————————————————
 
+;; Utilities to generate rx-to-string expressions
+;; TODO convert to rx - needs multi-level quasiquoting
 (eval-when-compile
- (defmacro cool-syms-re (syms)
-   `(concat "\\_<" (regexp-opt ,syms t) "\\_>")))
+  (defun rx-gen (func words)
+    "Generates a regex by applying 'func' to 'words' and wrapping the result in symbol-start and symbol-end"
+    (rx-to-string `(and symbol-start
+                        (or ,@(mapcar func words))
+                        symbol-end)))
+
+  (defun rx-initial-upper (word)
+    "Create an expression to match a case insensitive word starting with an upper case letter"
+    (rx-first #'upcase word))
+
+  (defun rx-initial-lower (word)
+    "Create an expression to match a case insensitive word starting with an upper case letter"
+    (rx-first #'downcase word))
+
+  (defun rx-first (first-f word)
+    "Create a case insensitive match after applying first-f to the first character"
+    `(and ,(funcall first-f (substring word 0 1))
+          ,@(mapcar #'rx-char-ci (substring word 1))))
+
+  (defun rx-keyword-ci (word)
+    "Create an expression for a case insensitive keyword"
+    `(and ,@(mapcar #'rx-char-ci word)))
+
+  (defun rx-char-ci (char)
+    "Create an expression for a case insensitive character.
+   Non-alphabetic characters are returned as a verbatim string."
+    (let* ((c (string char)) 
+           (u (upcase c))
+           (d (downcase c)))
+      (if (equal d u) 
+          c
+        `(any ,(concat u d)))))
+  
+  (defmacro cool-syms-re (syms)
+    `(concat "\\_<" (regexp-opt ,syms t) "\\_>")))
 
 ;; type/class names start with uppercase letter
 ;; "IO" "Object" "String" "SELF_TYPE" "Int" "Bool"
@@ -81,15 +116,16 @@
 
 (defvar cool-font-lock-keywords
   (eval-when-compile
-    ;; FIXME: keywords are case-insensitive, but constants are not (true, false)
-    (let ((keywords '("class" "else" "fi" "if" "in" "inherits" "isvoid" "let" "loop"
-                      "pool" "then" "while" "case" "esac" "new" "of" "not"))
-          (builtins '("length" "concat" "substr" "abort" "type_name" "copy"
-                      "new" "out_string" "out_int" "in_string" "in_int" "self"))
-          (constants '("true" "false")))
-      `((,(cool-syms-re keywords) . font-lock-keyword-face)
-        (,(cool-syms-re builtins) . font-lock-builtin-face)
-        (,(cool-syms-re constants) . font-lock-constant-face)
+    (let ((keywords  '("class" "else" "fi" "if" "in" "inherits" "isvoid" "let" "loop"
+                       "pool" "then" "while" "case" "esac" "new" "of" "not"))
+          (methods   '("length" "concat" "substr" "abort" "type_name" "copy"
+                       "new" "out_string" "out_int" "in_string" "in_int"))
+          (constants '("true" "false"))
+          (self      '("self" "SELF_TYPE")))
+      `((,(rx-gen #'rx-keyword-ci    keywords)  . font-lock-keyword-face)
+        (,(rx-gen #'rx-initial-lower constants) . font-lock-constant-face)
+        (,(rx-gen #'identity         self)      . font-lock-type-face)
+        (,(rx-gen #'identity         methods)   . font-lock-function-name-face) ;font-lock-builtin-face ??
         ;; Features (methods or attributes) must start with lowercase letter
         ("\\([[:alnum:]_]+\\)\\s *(" (1 font-lock-function-name-face))
         ;; variables
@@ -99,13 +135,14 @@
         ("\\([[:alnum:]_]+\\)[.]" (1 font-lock-variable-name-face))
         ;; types / classes
         (,(concat
-           "\\(?:\\<\\(?:class\\|inherits\\|new\\)\\>\\|\\:\\)[ \t]*" 
+           "\\(?:\\<\\(?:[Cc][Ll][Aa][Ss][Ss]\\|inherits\\|new\\)\\>\\|\\:\\)[ \t]*" 
            cool-type-name-re)
          (1 font-lock-type-face))
         ;; type conversion
         (,(concat "\\.\\s *(" cool-type-name-re)
          (1 font-lock-type-face)))))
   "Default expressions to font lock in cool-mode.")
+
 
 ;; nested comments, unusual string escape sequences -- sml-mode
 (defvar cool-syntax-prop-table
@@ -294,3 +331,4 @@
 (provide 'cool-mode)
 
 ;;; cool-mode.el ends here
+

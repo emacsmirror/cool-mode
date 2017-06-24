@@ -224,4 +224,22 @@ esac"))
   (cool--should-font-lock
    "let s : Int <- new Int in" 9 'font-lock-type-face))
 
+(ert-deftest cool--test-fl-constants ()
+  "Font lock true/false"
+  (cool--should-font-lock
+   "tRUE" 1 'font-lock-constant-face)
+  (cool--should-font-lock
+   "false" 1 'font-lock-constant-face)
+  (cool--should-font-lock
+   "fAlse" 1 'font-lock-constant-face)
+  (cool--should-font-lock
+   "TRUE" 1 nil))
+
+(ert-deftest cool--test-fl-keywords ()
+  "Font lock case-insensitive keywords"
+  (cool--should-font-lock
+   "cLaSs" 1 'font-lock-keyword-face)
+  (cool--should-font-lock
+   "class" 1 'font-lock-keyword-face))
+
 (provide 'cool-mode-tests)

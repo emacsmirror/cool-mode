@@ -47,7 +47,7 @@
   :link '(custom-group-link :tag "Font Lock Faces group" font-lock-faces)
   :group 'languages)
 
-(defcustom cool-indent-offset 2
+(defcustom cool-indent-offset 4
   "Default number of spaces to indent in `cool-mode'."
   :type 'integer
   :group 'cool)

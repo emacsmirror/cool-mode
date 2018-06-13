@@ -68,7 +68,7 @@
   :type '(repeat function)
   :group 'cool)
 
-;;——— Font-Lock ——————————————————————————————————————————————————————
+;;--- Font-Lock ------------------------------------------------------
 
 ;; Utilities to generate rx-to-string expressions
 ;; TODO convert to rx - needs multi-level quasiquoting
@@ -160,7 +160,7 @@
     nil nil nil nil
     (font-lock-syntactic-keywords . cool-font-lock-syntactic-keywords)))
 
-;;——— Indentation ————————————————————————————————————————————————————
+;;--- Indentation ----------------------------------------------------
 
 ;; smie references
 ;; #<marker at 52833 in smie.el>
@@ -205,7 +205,7 @@
     (`(:after . "{") (if (smie-rule-hanging-p) cool-indent-offset))
     ))
 
-;;——— Syntax —————————————————————————————————————————————————————————
+;;--- Syntax ---------------------------------------------------------
 
 ;; comments '--' or '(*', '*)', latter are nestable
 (defvar cool-mode-syntax-table
@@ -224,7 +224,7 @@
     (modify-syntax-entry ?\/ "." st)
     st))
 
-;;——— Commands ———————————————————————————————————————————————————————
+;;--- Commands -------------------------------------------------------
 
 ;; compile
 (defun cool-compile ()
@@ -285,7 +285,7 @@
      (t (newline)
         (indent-according-to-mode)))))
 
-;;——— Major Mode —————————————————————————————————————————————————————
+;;--- Major Mode -----------------------------------------------------
 
 (defvar cool-menu
   '("Cool"

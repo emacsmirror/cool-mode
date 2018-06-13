@@ -287,6 +287,16 @@
 
 ;;--- Major Mode -----------------------------------------------------
 
+;; imenu
+;; TODO: more advanced imenu support with methods as subcategories of classes?
+(defvar cool-imenu-regex
+  (eval-when-compile
+    `((nil ,(concat "\\s-*\\(?:[Cc][Ll][Aa][Ss][Ss]\\)\\>\\s-+\\("
+                    cool-type-name-re "\\)\\s-*"
+                    "\\(?:[Ii][Nn][hH][Ee][Rr][Ii][Tt][Ss]\\s-+"
+                    cool-type-name-re "\\)?\\s-*{")
+           1))))
+
 (defvar cool-menu
   '("Cool"
     ["Compile" cool-compile t]
@@ -314,6 +324,10 @@
   (setq-local comment-start-skip "\\(?:--+\\|(\\*+\\)\\s-*")
   (setq-local comment-end-skip "\\s-*\\*+)")
   (setq-local comment-quote-nested nil)
+
+  ;; imenu
+  (setq imenu-create-index-function 'imenu-default-create-index-function)
+  (setq imenu-generic-expression cool-imenu-regex)
 
   ;; indentation
   (smie-setup cool-smie-grammar #'cool-smie-rules

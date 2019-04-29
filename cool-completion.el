@@ -1,9 +1,10 @@
-;;; cool-completion --- completion for cool-mode
+;;; cool-completion --- completion for cool-mode  -*- lexical-binding: t; -*-
+
+;; This is free and unencumbered software released into the public domain.
 
 ;; Author: Noah Peart <noah.v.peart@gmail.com>
 ;; URL: https://github.com/nverno/cool-mode
 ;; Package-Requires: 
-;; Copyright (C) 2016, Noah Peart, all rights reserved.
 ;; Created: 14 October 2016
 
 ;; This file is not part of GNU Emacs.
@@ -72,19 +73,15 @@
 
 (defvar company-keywords-alist)
 
-(defun company-cool-add-keywords ()
+(defsubst company-cool-add-keywords ()
   "Add Cool keywords to `company-keywords-alist'."
   (setcdr
    (nthcdr (1- (length company-keywords-alist)) company-keywords-alist)
    `(,(append '(cool-mode) cool-keywords))))
 
-(eval-after-load 'company-keywords
-  '(when (not (assq 'cool-mode company-keywords-alist))
-     (company-cool-add-keywords)))
-
-(defun company-cool-keywords-setup ()
-  (make-local-variable 'company-backends)
-  (push 'company-keywords company-backends))
+(with-eval-after-load 'company-keywords
+  (when (not (assq 'cool-mode company-keywords-alist))
+    (company-cool-add-keywords)))
 
 (provide 'cool-completion)
 

@@ -1,9 +1,10 @@
-;;; cool-mode --- Major mode for cool compiler language editing -*- lexical-binding: t; -*-
+;;; cool-mode --- Major mode for cool compiler language -*- lexical-binding: t; -*-
+
+;; This is free and unencumbered software released into the public domain.
 
 ;; Author: Noah Peart <noah.v.peart@gmail.com>
 ;; URL: https://github.com/nverno/cool-mode
 ;; Package-Requires: 
-;; Copyright (C) 2016, Noah Peart, all rights reserved.
 ;; Created: 13 October 2016
 
 ;; This file is not part of GNU Emacs.
@@ -34,6 +35,7 @@
 ;; TODO:
 ;; - compiler/assembler
 ;; - annotate company
+;; - beginning/end of defun
 ;; - ~~case-insensitive keywords only~~ - done by bhrgunatha
 
 ;;; Code:
@@ -68,23 +70,34 @@
   :type '(repeat function)
   :group 'cool)
 
-;;--- Font-Lock ------------------------------------------------------
+(eval-when-compile
+  (defmacro setq-locals (&rest var-vals)
+    (macroexp-progn
+     (cl-loop for (var val) on var-vals by #'cddr
+        collect `(setq-local ,var ,val)))))
+
+
+;; -------------------------------------------------------------------
+;;; Font-Lock
 
 ;; Utilities to generate rx-to-string expressions
 ;; TODO convert to rx - needs multi-level quasiquoting
 (eval-when-compile
   (defun rx-gen (func words)
-    "Generates a regex by applying 'func' to 'words' and wrapping the result in symbol-start and symbol-end"
+    "Generates a regex by applying 'func' to 'words' and wrapping the result in \
+symbol-start and symbol-end"
     (rx-to-string `(and symbol-start
                         (or ,@(mapcar func words))
                         symbol-end)))
 
   (defun rx-initial-upper (word)
-    "Create an expression to match a case insensitive word starting with an upper case letter"
+    "Create an expression to match a case insensitive word starting with an upper \
+case letter"
     (rx-first #'upcase word))
 
   (defun rx-initial-lower (word)
-    "Create an expression to match a case insensitive word starting with an upper case letter"
+    "Create an expression to match a case insensitive word starting with an upper \
+case letter"
     (rx-first #'downcase word))
 
   (defun rx-first (first-f word)
@@ -104,10 +117,7 @@
            (d (downcase c)))
       (if (equal d u) 
           c
-        `(any ,(concat u d)))))
-  
-  (defmacro cool-syms-re (syms)
-    `(concat "\\_<" (regexp-opt ,syms t) "\\_>")))
+        `(any ,(concat u d))))))
 
 ;; type/class names start with uppercase letter
 ;; "IO" "Object" "String" "SELF_TYPE" "Int" "Bool"
@@ -143,7 +153,6 @@
          (1 font-lock-type-face)))))
   "Default expressions to font lock in cool-mode.")
 
-
 ;; nested comments, unusual string escape sequences -- sml-mode
 (defvar cool-syntax-prop-table
   (let ((st (make-syntax-table)))
@@ -160,7 +169,9 @@
     nil nil nil nil
     (font-lock-syntactic-keywords . cool-font-lock-syntactic-keywords)))
 
-;;--- Indentation ----------------------------------------------------
+
+;; -------------------------------------------------------------------
+;;; Indentation
 
 ;; smie references
 ;; #<marker at 52833 in smie.el>
@@ -205,28 +216,10 @@
     (`(:after . "{") (if (smie-rule-hanging-p) cool-indent-offset))
     ))
 
-;;--- Syntax ---------------------------------------------------------
+
+;; -------------------------------------------------------------------
+;;; Commands
 
-;; comments '--' or '(*', '*)', latter are nestable
-(defvar cool-mode-syntax-table
-  (let ((st (make-syntax-table)))
-    (modify-syntax-entry ?- ". 12b" st)
-    (modify-syntax-entry ?\n "> b" st)
-    (modify-syntax-entry ?\* ". 23c" st)
-    (modify-syntax-entry ?\( "( 1cn" st)
-    (modify-syntax-entry ?\) ") 4cn" st)
-    (modify-syntax-entry ?_ "_" st)
-    (modify-syntax-entry ?+ "." st)
-    (modify-syntax-entry ?~ "." st)
-    (modify-syntax-entry ?= "." st)
-    (modify-syntax-entry ?< "." st)
-    (modify-syntax-entry ?> "." st)
-    (modify-syntax-entry ?\/ "." st)
-    st))
-
-;;--- Commands -------------------------------------------------------
-
-;; compile
 (defun cool-compile ()
   "Compile current file with `cool-compiler'."
   (interactive)
@@ -243,9 +236,9 @@
    (format "%s %s.s" cool-assembler (file-name-sans-extension buffer-file-name))
    "*cool-output*"))
 
-;; comment as multi-line box if region spans more than one line,
-;; otherwise use single line comment
 (defun cool-comment-dwim (arg)
+  "Comment as mutli-line box if region spans more than one line, otherwise \
+use single line comment."
   (interactive "*P")
   (comment-normalize-vars)
   (if (use-region-p)
@@ -265,8 +258,9 @@
         (comment-dwim arg))
     (comment-dwim arg)))
 
-;; add " * " after newline in "(* ... *)" comment blocks
 (defun cool-newline-dwim ()
+  "Add comment continuation after newline in multi-line comment blocks, \
+eg. ' * '."
   (interactive)
   (let ((ppss (syntax-ppss)))
     (cond
@@ -285,7 +279,26 @@
      (t (newline)
         (indent-according-to-mode)))))
 
-;;--- Major Mode -----------------------------------------------------
+
+;; -------------------------------------------------------------------
+;;; Major Mode 
+
+;; comments '--' or '(*', '*)', latter are nestable
+(defvar cool-mode-syntax-table
+  (let ((st (make-syntax-table)))
+    (modify-syntax-entry ?- ". 12b" st)
+    (modify-syntax-entry ?\n "> b" st)
+    (modify-syntax-entry ?\* ". 23c" st)
+    (modify-syntax-entry ?\( "( 1cn" st)
+    (modify-syntax-entry ?\) ") 4cn" st)
+    (modify-syntax-entry ?_ "_" st)
+    (modify-syntax-entry ?+ "." st)
+    (modify-syntax-entry ?~ "." st)
+    (modify-syntax-entry ?= "." st)
+    (modify-syntax-entry ?< "." st)
+    (modify-syntax-entry ?> "." st)
+    (modify-syntax-entry ?\/ "." st)
+    st))
 
 ;; imenu
 ;; TODO: more advanced imenu support with methods as subcategories of classes?
@@ -297,37 +310,33 @@
                     cool-type-name-re "\\)?\\s-*{")
            1))))
 
-(defvar cool-menu
-  '("Cool"
-    ["Compile" cool-compile t]
-    ["Compile and Run" cool-compile-and-run t]))
-
 (defvar cool-mode-map
   (let ((km (make-sparse-keymap)))
-    (easy-menu-define nil km nil cool-menu)
     (define-key km (kbd "RET")     #'cool-newline-dwim)
     (define-key km (kbd "M-;")     #'cool-comment-dwim)
     (define-key km (kbd "<f5>")    #'cool-compile)
     (define-key km (kbd "C-c C-c") #'cool-compile-and-run)
+    (easy-menu-define nil km nil
+      '("Cool"
+        ["Compile" cool-compile t]
+        ["Compile and run" cool-compile-and-run t]))
     km))
-
-(define-abbrev-table 'cool-mode-abbrev-table ())
 
 ;;;###autoload
 (define-derived-mode cool-mode prog-mode "Cool"
-  "Major mode for editing cool source code.\n
-\\{cool-mode-map\}"
-  (setq-local local-abbrev-table cool-mode-abbrev-table)
-  (setq-local font-lock-defaults cool-font-lock-defaults)
-  (setq-local comment-start "-- ")
-  (setq-local comment-end "")
-  (setq-local comment-start-skip "\\(?:--+\\|(\\*+\\)\\s-*")
-  (setq-local comment-end-skip "\\s-*\\*+)")
-  (setq-local comment-quote-nested nil)
+  "Major mode for editing cool source code.
+
+\\{cool-mode-map}"
+  (setf font-lock-defaults cool-font-lock-defaults)
+  (setq-locals comment-start "--"
+               comment-end ""
+               comment-start-skip "\\(?:--+\\|(\\*+\\)\\s-*"
+               comment-end-skip "\\s-*\\*+)"
+               comment-quote-nested nil)
 
   ;; imenu
-  (setq imenu-create-index-function 'imenu-default-create-index-function)
-  (setq imenu-generic-expression cool-imenu-regex)
+  (setf imenu-create-index-function #'imenu-default-create-index-function
+        imenu-generic-expression cool-imenu-regex)
 
   ;; indentation
   (smie-setup cool-smie-grammar #'cool-smie-rules

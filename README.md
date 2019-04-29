@@ -10,6 +10,7 @@ Description:
 TODO:
 - compiler/assembler
 - annotate company
+- beginning/end of defun
 - ~~case-insensitive keywords only~~ - done by bhrgunatha
 
 

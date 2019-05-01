@@ -43,6 +43,7 @@
   (require 'cl-lib))
 (require 'smie)
 (require 'cool-completion)
+(require 'imenu)
 
 (defgroup cool nil
   "Major mode for cool compiler language files."

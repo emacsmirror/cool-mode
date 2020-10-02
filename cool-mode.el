@@ -233,9 +233,10 @@ case letter"
   "Compile and run current file, showing output in *cool-output*."
   (interactive)
   (call-interactively 'cool-compile)
-  (async-shell-command
-   (format "%s %s.s" cool-assembler (file-name-sans-extension buffer-file-name))
-   "*cool-output*"))
+  (let ((asm-file (concat (file-name-sans-extension buffer-file-name) ".s")))
+    (async-shell-command
+     (format "%s %s && rm %s" cool-assembler asm-file asm-file)
+     "*cool-output*")))
 
 (defun cool-comment-dwim (arg)
   "Comment as mutli-line box if region spans more than one line, otherwise \

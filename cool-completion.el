@@ -29,8 +29,7 @@
 ;;  Some completion support for `cool-mode'.
 
 ;;; Code:
-(eval-when-compile
-  (require 'cl-lib))
+(eval-when-compile (require 'cl-lib))
 (require 'company nil t)
 
 (defvar cool-keywords
@@ -79,6 +78,7 @@
    (nthcdr (1- (length company-keywords-alist)) company-keywords-alist)
    `(,(append '(cool-mode) cool-keywords))))
 
+;;;###autoload
 (with-eval-after-load 'company-keywords
   (when (not (assq 'cool-mode company-keywords-alist))
     (company-cool-add-keywords)))

@@ -72,7 +72,8 @@
 
 (defvar company-keywords-alist)
 
-(defsubst company-cool-add-keywords ()
+;;;###autoload
+(defun company-cool-add-keywords ()
   "Add Cool keywords to `company-keywords-alist'."
   (setcdr
    (nthcdr (1- (length company-keywords-alist)) company-keywords-alist)

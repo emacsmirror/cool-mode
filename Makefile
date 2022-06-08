@@ -1,5 +1,5 @@
-emacs ?= emacs
-wget  ?= wget
+emacs ?= $(shell command -v emacs)
+wget  ?= $(shell command -v wget)
 
 .PHONY: $(auto) clean distclean test
 all:

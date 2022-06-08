@@ -203,12 +203,12 @@ class VList inherits IO {
 
   tail()  : VList { { abort(); self; } };
 
-  -- When we cons and element onto the empty list we get a non-empty
-  -- list. The (new Cons) expression creates a new list cell of class
-  -- ECons, which is initialized by a dispatch to init().
-  -- The result of init() is an element of class Cons, but it
-  -- conforms to the return type List, because Cons is a subclass of
-  -- List.
+  (* When we cons and element onto the empty list we get a non-empty
+   * list. The (new Cons) expression creates a new list cell of class
+   * ECons, which is initialized by a dispatch to init().
+   * The result of init() is an element of class Cons, but it
+   * conforms to the return type List, because Cons is a subclass of
+   * List. *)
 
   cons(v : Vertice) : VList {
     (new VCons).init(v, self)

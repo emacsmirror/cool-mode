@@ -1,11 +1,12 @@
-;;; cool-mode --- Major mode for cool compiler language -*- lexical-binding: t; -*-
+;;; cool-mode.el --- Major mode for cool compiler language -*- lexical-binding: t; -*-
 
 ;; This is free and unencumbered software released into the public domain.
 
 ;; Author: Noah Peart <noah.v.peart@gmail.com>
 ;; URL: https://github.com/nverno/cool-mode
-;; Package-Requires: 
+;; Package-Requires: ((emacs "25"))
 ;; Created: 13 October 2016
+;; Version: 1.0.0
 
 ;; This file is not part of GNU Emacs.
 ;;
@@ -25,13 +26,12 @@
 ;; Floor, Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
-
-;; [![Build Status](https://travis-ci.org/nverno/cool-mode.svg?branch=master)](https://travis-ci.org/nverno/cool-mode)
-
-;;; Description:
-
-;;  Editing mode for cool compiler language.
-
+;;
+;;  A major mode for editing Cool programming language files.
+;;
+;;  The COOL language, https://en.wikipedia.org/wiki/Cool_(programming_language),
+;;  is developed in a number of compiler courses.
+;;
 ;; TODO:
 ;; - compiler/assembler
 ;; - annotate company
@@ -40,7 +40,8 @@
 
 ;;; Code:
 (eval-when-compile
-  (require 'cl-lib))
+  (require 'cl-lib)
+  (require 'rx))
 (require 'smie)
 (require 'cool-completion)
 (require 'imenu)
@@ -71,11 +72,6 @@
   :type '(repeat function)
   :group 'cool)
 
-(eval-when-compile
-  (defmacro setq-locals (&rest var-vals)
-    (macroexp-progn
-     (cl-loop for (var val) on var-vals by #'cddr
-        collect `(setq-local ,var ,val)))))
 
 
 ;; -------------------------------------------------------------------
@@ -84,39 +80,38 @@
 ;; Utilities to generate rx-to-string expressions
 ;; TODO convert to rx - needs multi-level quasiquoting
 (eval-when-compile
-  (defun rx-gen (func words)
-    "Generates a regex by applying 'func' to 'words' and wrapping the result in \
-symbol-start and symbol-end"
+  (defun cool--rx-gen (func words)
+    "Generates a regex by applying FUNC to WORDS and wrapping the
+ result in symbol-start and symbol-end."
     (rx-to-string `(and symbol-start
                         (or ,@(mapcar func words))
                         symbol-end)))
+  (defun cool--rx-initial-upper (word)
+    "Create an expression to match a case insensitive word starting with an
+ upper case letter"
+    (cool--rx-first #'upcase word))
 
-  (defun rx-initial-upper (word)
-    "Create an expression to match a case insensitive word starting with an upper \
-case letter"
-    (rx-first #'upcase word))
+  (defun cool--rx-initial-lower (word)
+    "Create an expression to match a case insensitive word starting with an
+ upper case letter"
+    (cool--rx-first #'downcase word))
 
-  (defun rx-initial-lower (word)
-    "Create an expression to match a case insensitive word starting with an upper \
-case letter"
-    (rx-first #'downcase word))
-
-  (defun rx-first (first-f word)
+  (defun cool--rx-first (first-f word)
     "Create a case insensitive match after applying first-f to the first character"
     `(and ,(funcall first-f (substring word 0 1))
-          ,@(mapcar #'rx-char-ci (substring word 1))))
+          ,@(mapcar #'cool--rx-char-ci (substring word 1))))
 
-  (defun rx-keyword-ci (word)
+  (defun cool--rx-keyword-ci (word)
     "Create an expression for a case insensitive keyword"
-    `(and ,@(mapcar #'rx-char-ci word)))
+    `(and ,@(mapcar #'cool--rx-char-ci word)))
 
-  (defun rx-char-ci (char)
+  (defun cool--rx-char-ci (char)
     "Create an expression for a case insensitive character.
    Non-alphabetic characters are returned as a verbatim string."
-    (let* ((c (string char)) 
+    (let* ((c (string char))
            (u (upcase c))
            (d (downcase c)))
-      (if (equal d u) 
+      (if (equal d u)
           c
         `(any ,(concat u d))))))
 
@@ -133,10 +128,10 @@ case letter"
                        "new" "out_string" "out_int" "in_string" "in_int"))
           (constants '("true" "false"))
           (self      '("self" "SELF_TYPE")))
-      `((,(rx-gen #'rx-keyword-ci    keywords)  . font-lock-keyword-face)
-        (,(rx-gen #'rx-initial-lower constants) . font-lock-constant-face)
-        (,(rx-gen #'identity         self)      . font-lock-type-face)
-        (,(rx-gen #'identity         methods)   . font-lock-function-name-face) ;font-lock-builtin-face ??
+      `((,(cool--rx-gen #'cool--rx-keyword-ci    keywords)  . font-lock-keyword-face)
+        (,(cool--rx-gen #'cool--rx-initial-lower constants) . font-lock-constant-face)
+        (,(cool--rx-gen #'identity         self)      . font-lock-type-face)
+        (,(cool--rx-gen #'identity         methods)   . font-lock-function-name-face) ;font-lock-builtin-face ??
         ;; Features (methods or attributes) must start with lowercase letter
         ("\\([[:alnum:]_]+\\)\\s *(" (1 font-lock-function-name-face))
         ;; variables
@@ -146,13 +141,13 @@ case letter"
         ("\\([[:alnum:]_]+\\)[.]" (1 font-lock-variable-name-face))
         ;; types / classes
         (,(concat
-           "\\(?:\\<\\(?:[Cc][Ll][Aa][Ss][Ss]\\|inherits\\|new\\)\\>\\|\\:\\)[ \t]*" 
+           "\\(?:\\<\\(?:[Cc][Ll][Aa][Ss][Ss]\\|inherits\\|new\\)\\>\\|\\:\\)[ \t]*"
            cool-type-name-re)
          (1 font-lock-type-face))
         ;; type conversion
         (,(concat "\\.\\s *(" cool-type-name-re)
          (1 font-lock-type-face)))))
-  "Default expressions to font lock in cool-mode.")
+  "Default expressions to font lock in `cool-mode'.")
 
 ;; nested comments, unusual string escape sequences -- sml-mode
 (defvar cool-syntax-prop-table
@@ -173,12 +168,6 @@ case letter"
 
 ;; -------------------------------------------------------------------
 ;;; Indentation
-
-;; smie references
-;; #<marker at 52833 in smie.el>
-;; #<marker at 14780 in sml-mode.el>
-;; #<marker at 67654 in sh-script.el>
-;; #<marker at 11868 in ruby-mode.el>
 
 ;; precedence: high -> low
 ;; . @ ~ isvoid [* /] [+ -] [<= < =] not <-
@@ -201,6 +190,8 @@ case letter"
      '((assoc ",") (assoc " ") (nonassoc "=>"))))))
 
 (defun cool-smie-rules (kind token)
+  "Cool smie completion rules.
+KIND and TOKEN are explained by `smie-rules-function'."
   (pcase (cons kind token)
     (`(:elem . basic) cool-indent-offset)
     (`(:elem . args) 0)
@@ -214,8 +205,7 @@ case letter"
     (`(:after . "else")
      (if (and (smie-rule-hanging-p) (smie-rule-next-p "if")) 0))
     (`(:after . "(") (if (and (smie-rule-next-p "let")) 1))
-    (`(:after . "{") (if (smie-rule-hanging-p) cool-indent-offset))
-    ))
+    (`(:after . "{") (if (smie-rule-hanging-p) cool-indent-offset))))
 
 
 ;; -------------------------------------------------------------------
@@ -239,8 +229,8 @@ case letter"
      "*cool-output*")))
 
 (defun cool-comment-dwim (arg)
-  "Comment as mutli-line box if region spans more than one line, otherwise \
-use single line comment."
+  "Comment as mutli-line box if region spans more than one line.
+Otherwise use single line comment. Prefix ARG is passed to `comment-dwim'."
   (interactive "*P")
   (comment-normalize-vars)
   (if (use-region-p)
@@ -283,7 +273,7 @@ eg. ' * '."
 
 
 ;; -------------------------------------------------------------------
-;;; Major Mode 
+;;; Major Mode
 
 ;; comments '--' or '(*', '*)', latter are nestable
 (defvar cool-mode-syntax-table
@@ -316,7 +306,7 @@ eg. ' * '."
   (let ((km (make-sparse-keymap)))
     (define-key km (kbd "RET")     #'cool-newline-dwim)
     (define-key km (kbd "M-;")     #'cool-comment-dwim)
-    (define-key km (kbd "<f5>")    #'cool-compile)
+    ;; (define-key km (kbd "<f5>")    #'cool-compile)
     (define-key km (kbd "C-c C-c") #'cool-compile-and-run)
     (easy-menu-define nil km nil
       '("Cool"
@@ -330,13 +320,12 @@ eg. ' * '."
 
 \\{cool-mode-map}"
   (setf font-lock-defaults cool-font-lock-defaults)
-  (setq-locals comment-start "--"
-               comment-end ""
-               comment-start-skip "\\(?:--+\\|(\\*+\\)\\s-*"
-               comment-end-skip "\\s-*\\*+)"
-               comment-quote-nested nil)
+  (setq-local comment-start "--")
+  (setq-local comment-end "")
+  (setq-local comment-start-skip "\\(?:--+\\|(\\*+\\)\\s-*")
+  (setq-local comment-end-skip "\\s-*\\*+)")
+  (setq-local comment-quote-nested nil)
 
-  ;; imenu
   (setf imenu-create-index-function #'imenu-default-create-index-function
         imenu-generic-expression cool-imenu-regex)
 
@@ -356,4 +345,3 @@ eg. ' * '."
 (provide 'cool-mode)
 
 ;;; cool-mode.el ends here
-

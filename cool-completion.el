@@ -1,11 +1,12 @@
-;;; cool-completion --- completion for cool-mode  -*- lexical-binding: t; -*-
+;;; cool-completion.el --- Completion for cool-mode  -*- lexical-binding: t; -*-
 
 ;; This is free and unencumbered software released into the public domain.
 
 ;; Author: Noah Peart <noah.v.peart@gmail.com>
 ;; URL: https://github.com/nverno/cool-mode
-;; Package-Requires: 
+;; Package-Requires: ((emacs "25"))
 ;; Created: 14 October 2016
+;; Version: 1.0.0
 
 ;; This file is not part of GNU Emacs.
 ;;
@@ -32,7 +33,7 @@
 (eval-when-compile (require 'cl-lib))
 (require 'company nil t)
 
-(defvar cool-keywords
+(defconst cool-completion-keywords
   '("class"  "else"       "false"    "fi"    "if"
     "in"     "inherits"   "isvoid"   "let"   "loop"
     "pool"   "then"       "while"    "case"  "esac"
@@ -42,15 +43,15 @@
     "new" "out_string" "out_int" "in_string" "in_int"
     "self" "true" "false"))
 
-(defvar cool-types '("IO" "Object" "String" "SELF_TYPE" "Int" "Bool"))
+(defconst cool-completion-types '("IO" "Object" "String" "SELF_TYPE" "Int" "Bool"))
 
 ;; completion at point
 
-(defun cool--types ()
+(defun cool-completion--types ()
   "Return list of types identified in current buffer, plus builtins."
   (save-excursion
     (goto-char (point-min))
-    (let ((vars cool-types))
+    (let ((vars cool-completion-types))
       (while
           (re-search-forward
            "\\(?:\\<\\(?:class\\|inherits\\|new\\)\\>\\)[ \t]*\\([A-Z]\\w*\\)"
@@ -59,6 +60,7 @@
       vars)))
 
 (defun cool-completion-at-point-function ()
+  "Cool mode `completion-at-point' function."
   (save-excursion
     (skip-chars-forward "A-Za-z_")
     (let ((end (point))
@@ -66,7 +68,7 @@
           (start (point)))
       (cond
        ((looking-back ":[ \t]*" (line-beginning-position))
-        (list start end (cool--types)))))))
+        (list start end (cool-completion--types)))))))
 
 ;; company keywords
 
@@ -77,7 +79,7 @@
   "Add Cool keywords to `company-keywords-alist'."
   (setcdr
    (nthcdr (1- (length company-keywords-alist)) company-keywords-alist)
-   `(,(append '(cool-mode) cool-keywords))))
+   `(,(append '(cool-mode) cool-completion-keywords))))
 
 ;;;###autoload
 (with-eval-after-load 'company-keywords

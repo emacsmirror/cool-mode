@@ -217,12 +217,12 @@ KIND and TOKEN are explained by `smie-rules-function'."
   (let ((compile-command
          (format "%s %s" cool-compiler buffer-file-name))
         (compilation-read-command))
-    (call-interactively 'compile)))
+    (call-interactively #'compile)))
 
 (defun cool-compile-and-run ()
   "Compile and run current file, showing output in *cool-output*."
   (interactive)
-  (call-interactively 'cool-compile)
+  (call-interactively #'cool-compile)
   (let ((asm-file (concat (file-name-sans-extension buffer-file-name) ".s")))
     (async-shell-command
      (format "%s %s && rm %s" cool-assembler asm-file asm-file)
@@ -340,7 +340,7 @@ eg. ' * '."
 
 ;; not using .cl because of common-lisp
 ;;;###autoload
-(add-to-list 'auto-mode-alist (cons "\\.cool$" #'cool-mode))
+(add-to-list 'auto-mode-alist (cons "\\.cool\\'" #'cool-mode))
 
 (provide 'cool-mode)
 

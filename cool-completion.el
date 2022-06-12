@@ -4,7 +4,6 @@
 
 ;; Author: Noah Peart <noah.v.peart@gmail.com>
 ;; URL: https://github.com/nverno/cool-mode
-;; Package-Requires: ((emacs "25"))
 ;; Created: 14 October 2016
 ;; Version: 1.0.0
 
@@ -75,7 +74,7 @@
 (defvar company-keywords-alist)
 
 ;;;###autoload
-(defun company-cool-add-keywords ()
+(defun cool-completion-company-add-keywords ()
   "Add Cool keywords to `company-keywords-alist'."
   (setcdr
    (nthcdr (1- (length company-keywords-alist)) company-keywords-alist)
@@ -84,7 +83,7 @@
 ;;;###autoload
 (with-eval-after-load 'company-keywords
   (when (not (assq 'cool-mode company-keywords-alist))
-    (company-cool-add-keywords)))
+    (cool-completion-company-add-keywords)))
 
 (provide 'cool-completion)
 

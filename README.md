@@ -5,14 +5,10 @@
 
 Description:
 
- Editing mode for cool compiler language.
+ A major mode for editing Cool programming language files.
 
-TODO:
-- compiler/assembler
-- annotate company
-- beginning/end of defun
-- ~~case-insensitive keywords only~~ - done by bhrgunatha
-
+ The COOL language, https://en.wikipedia.org/wiki/Cool_(programming_language),
+ is developed in a number of compiler courses.
 
 ---
 Converted from `cool-mode.el` by [*el2markdown*](https://github.com/Lindydancer/el2markdown).

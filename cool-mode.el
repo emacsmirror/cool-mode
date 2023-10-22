@@ -1,7 +1,5 @@
 ;;; cool-mode.el --- Major mode for cool compiler language -*- lexical-binding: t; -*-
 
-;; This is free and unencumbered software released into the public domain.
-
 ;; Author: Noah Peart <noah.v.peart@gmail.com>
 ;; URL: https://github.com/nverno/cool-mode
 ;; Package-Requires: ((emacs "25"))

@@ -236,7 +236,7 @@ Otherwise use single line comment. Prefix ARG is passed to `comment-dwim'."
                       (goto-char (region-beginning))
                       (while (looking-at-p "\\s-*$")
                         (forward-line))
-                      (point-at-eol)))
+                      (line-end-position)))
              (end (save-excursion
                     (goto-char (region-end))
                     (skip-chars-backward " \n\t\r")
